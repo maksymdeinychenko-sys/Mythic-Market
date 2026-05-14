@@ -17,6 +17,7 @@ import { itemById } from "@/data/items";
 import { heroById } from "@/data/heroes";
 import { HeroArt } from "./HeroArt";
 import { CombatCard } from "./CombatCard";
+import { SFX } from "@/core/audio";
 import type { CombatEvent, CombatResult } from "@/core/combat";
 import type { ItemInstance } from "@/core/types";
 
@@ -110,33 +111,45 @@ export function Combat() {
   function handleEvent(ev: CombatEvent) {
     if (ev.kind === "trigger") {
       setShaken((s) => ({ ...s, [ev.itemUid]: Date.now() }));
+      SFX.trigger();
     } else if (ev.kind === "damage" && ev.amount > 0) {
       pushFloat(ev.targetSide, `-${Math.round(ev.amount)}`, "var(--hp)");
       setFxTimes((s) => ({ ...s, [ev.targetSide]: { ...s[ev.targetSide], dmg: ev.t } }));
+      SFX.damage();
     } else if (ev.kind === "heal" && ev.amount > 0) {
       pushFloat(ev.side, `+${Math.round(ev.amount)}`, "var(--plant)");
       setFxTimes((s) => ({ ...s, [ev.side]: { ...s[ev.side], heal: ev.t } }));
+      SFX.heal();
     } else if (ev.kind === "shield" && ev.amount > 0) {
       pushFloat(ev.side, `+${ev.amount}🛡`, "var(--shield)");
       setFxTimes((s) => ({ ...s, [ev.side]: { ...s[ev.side], shield: ev.t } }));
+      SFX.shield();
     } else if (ev.kind === "sandstorm-tick") {
       pushFloat(ev.targetSide, `-${ev.amount}🌪`, "#e5b675");
       setFxTimes((s) => ({ ...s, [ev.targetSide]: { ...s[ev.targetSide], dmg: ev.t } }));
+      SFX.sandstorm();
     } else if (ev.kind === "slow") {
       pushFloat(ev.side === "P" ? "E" : "P", `slow +${ev.amount.toFixed(1)}s`, "var(--fish)");
+      SFX.slow();
     } else if (ev.kind === "burn-tick" && ev.amount > 0) {
       pushFloat(ev.targetSide, `-${ev.amount}🔥`, "#ff6e3c");
       setFxTimes((s) => ({ ...s, [ev.targetSide]: { ...s[ev.targetSide], burn: ev.t, dmg: ev.t } }));
+      SFX.burn();
     } else if (ev.kind === "burn-apply") {
       setFxTimes((s) => ({ ...s, [ev.targetSide]: { ...s[ev.targetSide], burn: ev.t } }));
     } else if (ev.kind === "poison-tick" && ev.amount > 0) {
       pushFloat(ev.targetSide, `-${ev.amount}☠`, "#7fc97f");
       setFxTimes((s) => ({ ...s, [ev.targetSide]: { ...s[ev.targetSide], poison: ev.t, dmg: ev.t } }));
+      SFX.poison();
     } else if (ev.kind === "poison-apply") {
       setFxTimes((s) => ({ ...s, [ev.targetSide]: { ...s[ev.targetSide], poison: ev.t } }));
     } else if (ev.kind === "regen-tick" && ev.amount > 0) {
       pushFloat(ev.side, `+${ev.amount}🌿`, "var(--plant)");
       setFxTimes((s) => ({ ...s, [ev.side]: { ...s[ev.side], heal: ev.t } }));
+    } else if (ev.kind === "end") {
+      // Play the combat-end fanfare relative to the player.
+      if (ev.winner === "P") SFX.victory();
+      else if (ev.winner === "E") SFX.defeat();
     }
   }
 

@@ -162,6 +162,39 @@ button.mm-btn.danger:hover:not(:disabled) { background: var(--hp); color: white;
 .stat-pill.gold { border-color: rgba(212, 168, 87, 0.6); color: var(--accent-amber); }
 .stat-pill.xp { border-color: rgba(136, 181, 214, 0.6); }
 
+/* TopBar icon buttons (mute, give up) */
+.topbar-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 10px;
+  margin-left: 4px;
+  background: rgba(33, 57, 44, 0.6);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.topbar-icon-btn:hover {
+  background: var(--bg-soft);
+  border-color: var(--accent-amber);
+}
+.topbar-icon-btn.danger {
+  border-color: rgba(200, 74, 74, 0.5);
+  color: rgba(255, 180, 180, 0.85);
+}
+.topbar-icon-btn.danger:hover {
+  background: rgba(200, 74, 74, 0.2);
+  border-color: var(--hp);
+  color: #ffd0d0;
+}
+
 /* ─── Main menu ─────────────────────────────────────────────────────────── */
 .menu-card-grid {
   display: grid;
@@ -1077,20 +1110,36 @@ button.mm-btn.danger:hover:not(:disabled) { background: var(--hp); color: white;
   100% { background-position:  100% 0; }
 }
 
-/* Trigger / ready states */
+/* Trigger / ready states.
+   The bounce is a single keyframe animation that plays once per activation
+   (0.4s) — no continuous pulse. "Ready" only changes border color so the
+   player can still tell when a slow item is about to fire, but the visual
+   doesn't loop. */
 .cc-triggered {
-  transform: translateY(-4px) scale(1.04);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.5), 0 0 24px var(--accent-gold), inset 0 0 0 1px var(--accent-gold);
+  animation: mm-cc-trigger-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   border-color: var(--accent-gold);
+  z-index: 2;
 }
 .cc-ready {
   border-color: var(--accent-amber);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 0 16px rgba(224, 177, 112, 0.5);
-  animation: mm-cc-ready-pulse 1.2s ease-in-out infinite;
 }
-@keyframes mm-cc-ready-pulse {
-  0%, 100% { box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 0 12px rgba(224, 177, 112, 0.45); }
-  50%      { box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 0 24px rgba(224, 177, 112, 0.85); }
+@keyframes mm-cc-trigger-pop {
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  }
+  35% {
+    transform: translateY(-8px) scale(1.08);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.55), 0 0 30px var(--accent-gold), inset 0 0 0 2px var(--accent-gold);
+  }
+  65% {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.5), 0 0 16px var(--accent-gold);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  }
 }
 .cc-burst {
   position: absolute;

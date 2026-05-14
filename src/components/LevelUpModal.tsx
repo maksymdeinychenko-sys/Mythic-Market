@@ -1,6 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useGameStore, useRng } from "@/store/gameStore";
 import { rollPerkChoices, type PerkDef } from "@/data/perks";
+import { SFX } from "@/core/audio";
 
 /**
  * Shown over the workshop whenever pendingPerkChoices > 0. Locks input until
@@ -16,6 +17,15 @@ export function LevelUpModal() {
     () => (run ? rollPerkChoices(rng, run.perks, 3) : []),
     [seed]
   );
+
+  // Play the fanfare each time a new perk choice is presented (gated to fire
+  // once per choice-seed by being inside an effect keyed on the seed).
+  useEffect(() => {
+    if (run && run.pendingPerkChoices > 0 && screen !== "Combat") {
+      SFX.levelUp();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seed, screen]);
 
   if (!run || run.pendingPerkChoices <= 0) return null;
   // Defer the perk picker until the player is back on a non-combat screen so

@@ -17,6 +17,7 @@ import { simulateCombat, type CombatResult } from "@/core/combat";
 import { heroById } from "@/data/heroes";
 import { captureGhost, persistGhost, matchmakeGhost, ghostToCombatant, seedMockGhostsIfEmpty } from "@/core/ghost";
 import { createRng, type Rng } from "@/utils/rng";
+import { SFX, setMuted as setSfxMuted } from "@/core/audio";
 
 // ─── Store shape ────────────────────────────────────────────────────────────
 interface GameState {
@@ -34,9 +35,13 @@ interface GameState {
   // Free-mode: total passes the player owns
   totalPasses: number;
 
+  // User settings
+  audioMuted: boolean;
+
   // Actions
   startRun: (heroId: string) => void;
   goto: (screen: ScreenId) => void;
+  toggleAudioMute: () => void;
 
   // Workshop actions
   placeStashInSlot: (uid: string, slot: number) => void;
@@ -87,6 +92,7 @@ export const useGameStore = create<GameState>()(
   lastGhost: null,
   passesEarned: 0,
   totalPasses: 0,
+  audioMuted: false,
 
   startRun: (heroId) => {
     seedMockGhostsIfEmpty(get().rng, 30);
@@ -105,6 +111,12 @@ export const useGameStore = create<GameState>()(
 
   goto: (screen) => set({ screen }),
 
+  toggleAudioMute: () => {
+    const next = !get().audioMuted;
+    setSfxMuted(next);
+    set({ audioMuted: next });
+  },
+
   placeStashInSlot: (uid, slot) => {
     const rs = get().run; if (!rs) return;
     set({ run: moveStashToBattle(rs, uid, slot) });
@@ -115,19 +127,27 @@ export const useGameStore = create<GameState>()(
   },
   mergeBattle: (dragUid, targetUid) => {
     const rs = get().run; if (!rs) return;
-    set({ run: attemptMergeInBattle(rs, dragUid, targetUid) });
+    const before = rs.battleInventory.length;
+    const next = attemptMergeInBattle(rs, dragUid, targetUid);
+    set({ run: next });
+    if (next.battleInventory.length !== before) SFX.merge();
   },
   mergeStashToBattle: (stashUid, battleUid) => {
     const rs = get().run; if (!rs) return;
-    set({ run: attemptMergeStashToBattle(rs, stashUid, battleUid) });
+    const before = rs.battleInventory.length + rs.stash.length;
+    const next = attemptMergeStashToBattle(rs, stashUid, battleUid);
+    set({ run: next });
+    if (next.battleInventory.length + next.stash.length !== before) SFX.merge();
   },
   sellStash: (uid) => {
     const rs = get().run; if (!rs) return;
     set({ run: sellFromStash(rs, uid) });
+    SFX.sell();
   },
   sellBattle: (uid) => {
     const rs = get().run; if (!rs) return;
     set({ run: sellFromBattle(rs, uid) });
+    SFX.sell();
   },
 
   openShop: () => {
@@ -151,7 +171,10 @@ export const useGameStore = create<GameState>()(
     const { run, shop } = get();
     if (!run || !shop) return;
     const next = buy(run, shop, idx);
-    if (next) set({ run: next.rs, shop: next.shop });
+    if (next) {
+      set({ run: next.rs, shop: next.shop });
+      SFX.purchase();
+    }
   },
 
   prepareEncounter: (difficulty) => {
@@ -343,10 +366,15 @@ export const useGameStore = create<GameState>()(
         lastGhost: state.lastGhost,
         passesEarned: state.passesEarned,
         totalPasses: state.totalPasses,
+        audioMuted: state.audioMuted,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Sync the global SFX mute flag with the persisted preference.
+        if (state) setSfxMuted(state.audioMuted ?? false);
+      },
       // v2: phaseChoices. v3: combat playback fields. v4: HP→Lives split.
-      // v5: perks + pendingPerkChoices on RunState.
-      version: 5,
+      // v5: perks + pendingPerkChoices. v6: audioMuted preference at top level.
+      version: 6,
       migrate: (persisted: any, oldVersion: number) => {
         if (!persisted) return persisted;
         if (oldVersion < 2 && persisted.run && !persisted.run.phaseChoices) {
@@ -365,7 +393,10 @@ export const useGameStore = create<GameState>()(
           if (persisted.run.lives === undefined) persisted.run.lives = 10;
           if (persisted.run.maxLives === undefined) persisted.run.maxLives = 10;
         }
-        // Belt-and-braces: ensure required v5 fields always exist.
+        if (oldVersion < 6) {
+          if (typeof persisted.audioMuted !== "boolean") persisted.audioMuted = false;
+        }
+        // Belt-and-braces: ensure required v6 fields always exist.
         if (persisted.run) {
           if (typeof persisted.run.lives !== "number") persisted.run.lives = 10;
           if (typeof persisted.run.maxLives !== "number") persisted.run.maxLives = 10;
@@ -375,6 +406,7 @@ export const useGameStore = create<GameState>()(
           delete persisted.run.maxHp;
           delete persisted.run.currentHp;
         }
+        if (typeof persisted.audioMuted !== "boolean") persisted.audioMuted = false;
         return persisted;
       },
     }

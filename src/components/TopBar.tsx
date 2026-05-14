@@ -5,18 +5,39 @@ import { xpToNext } from "@/core/progression";
 import { HeroArt } from "./HeroArt";
 
 export function TopBar() {
-  const { run, totalPasses, screen } = useGameStore();
+  const { run, totalPasses, screen, audioMuted, toggleAudioMute, abandonRun } = useGameStore();
+
+  function giveUp() {
+    if (confirm("Give up this run and return to the main menu? Your progress will be lost.")) {
+      abandonRun();
+    }
+  }
+
+  // ─── Idle state (no run) ────────────────────────────────────────────────
   if (!run) {
     return (
       <div className="top-bar">
         <div className="h2" style={{ marginBottom: 0 }}>Mythic Market</div>
-        <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span className="stat-pill">🎟️ {totalPasses} Passes</span>
+          <button
+            className="topbar-icon-btn"
+            onClick={toggleAudioMute}
+            title={audioMuted ? "Unmute sound" : "Mute sound"}
+            aria-label={audioMuted ? "Unmute sound" : "Mute sound"}
+          >
+            {audioMuted ? "🔇" : "🔊"}
+          </button>
         </div>
       </div>
     );
   }
+
+  // ─── In-run state ───────────────────────────────────────────────────────
   const hero = heroById(run.heroId);
+  // Hide destructive buttons during Combat so they can't be mis-clicked mid-fight.
+  const canGiveUp = screen !== "Combat";
+
   return (
     <div className="top-bar">
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -31,12 +52,29 @@ export function TopBar() {
           </div>
         </div>
       </div>
-      <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <span className="stat-pill hp" title="Hearts — your run lives. Lose one per defeat. Run ends at zero.">
           ❤ {run.lives} / {run.maxLives}
         </span>
         <span className="stat-pill gold">⛀ {run.gold}</span>
         <span className="stat-pill">🎟 {totalPasses}</span>
+        <button
+          className="topbar-icon-btn"
+          onClick={toggleAudioMute}
+          title={audioMuted ? "Unmute sound" : "Mute sound"}
+          aria-label={audioMuted ? "Unmute sound" : "Mute sound"}
+        >
+          {audioMuted ? "🔇" : "🔊"}
+        </button>
+        {canGiveUp && (
+          <button
+            className="topbar-icon-btn danger"
+            onClick={giveUp}
+            title="Give up this run and return to the main menu"
+          >
+            Give Up
+          </button>
+        )}
       </div>
     </div>
   );
