@@ -14,7 +14,7 @@ import { StashDrawer } from "./StashDrawer";
 type DragSource = { kind: "stash" | "battle"; uid: string };
 
 export function Workshop() {
-  const { run, shop, openShop, closeShop, placeStashInSlot, unplaceFromBattle, mergeBattle, mergeStashToBattle, sellStash, advance, goto } = useGameStore();
+  const { run, shop, openShop, closeShop, placeStashInSlot, unplaceFromBattle, mergeBattle, mergeStashToBattle, sellStash, sellBattle, advance, goto } = useGameStore();
   const [drag, setDrag] = useState<DragSource | null>(null);
   const [hoverSlot, setHoverSlot] = useState<number | null>(null);
 
@@ -52,8 +52,15 @@ export function Workshop() {
       if (!drag) return;
       const targetItem = grid[slotIdx];
 
+      // Drop onto self: no-op. Catches drag-onto-own-slot and the multi-cell
+      // case where a 2-slot item's other cells are technically "targetItem".
+      if (targetItem && targetItem.uid === drag.uid) {
+        setDrag(null);
+        return;
+      }
+
       if (targetItem) {
-        // Try merge
+        // Try merge — tryMerge also defensively rejects same-uid pairs.
         if (drag.kind === "battle") mergeBattle(drag.uid, targetItem.uid);
         else mergeStashToBattle(drag.uid, targetItem.uid);
       } else {
@@ -104,6 +111,7 @@ export function Workshop() {
                   draggable={!isLocked}
                   onDragStart={dragStart({ kind: "battle", uid: occupant.uid })}
                   onClick={() => {}}
+                  onSell={() => sellBattle(occupant.uid)}
                 />
               ) : isLocked ? (
                 <span className="muted" style={{ fontSize: 11 }}>🔒 Lv {unlockLevelForSlot(i)}</span>

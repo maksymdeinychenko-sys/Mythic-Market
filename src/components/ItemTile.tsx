@@ -2,6 +2,7 @@ import React from "react";
 import type { ItemInstance } from "@/core/types";
 import { itemById } from "@/data/items";
 import { effectiveLinkDir } from "@/core/inventory";
+import { sellPrice } from "@/core/shop";
 import { ItemArt } from "./ItemArt";
 import { HoverTooltip } from "./HoverTooltip";
 import { ItemTooltip } from "./ItemTooltip";
@@ -14,10 +15,12 @@ interface Props {
   onDragLeave?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
   onClick?: () => void;
+  /** Hover-revealed sell button; pass a handler to enable. */
+  onSell?: () => void;
   small?: boolean;
 }
 
-export function ItemTile({ inst, draggable = false, onDragStart, onDragOver, onDragLeave, onDrop, onClick, small }: Props) {
+export function ItemTile({ inst, draggable = false, onDragStart, onDragOver, onDragLeave, onDrop, onClick, onSell, small }: Props) {
   const def = itemById(inst.defId);
   const dir = effectiveLinkDir(inst);
   const sizeClass = def.size === 2 ? "size-2" : def.size === 3 ? "size-3" : "";
@@ -41,6 +44,18 @@ export function ItemTile({ inst, draggable = false, onDragStart, onDragOver, onD
         {dir === "Left" && <div className="link-arrow left">←</div>}
         {dir === "Right" && <div className="link-arrow right">→</div>}
         {dir === "Both" && <div className="link-arrow both">↔</div>}
+        {onSell && (
+          <button
+            className="item-tile-sell"
+            // stopPropagation prevents the click from also triggering drag.
+            onClick={(e) => { e.stopPropagation(); onSell(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+            title={`Sell for ${sellPrice(inst.rarity)} gold`}
+            aria-label={`Sell for ${sellPrice(inst.rarity)} gold`}
+          >
+            {sellPrice(inst.rarity)}
+          </button>
+        )}
       </div>
     </HoverTooltip>
   );

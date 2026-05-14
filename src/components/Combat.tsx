@@ -397,11 +397,19 @@ function CombatantPane(p: PaneProps) {
             <span className="arena-shield-num">⛨ {Math.round(p.shield)}</span>
           )}
         </div>
-        <div className="arena-hp-bar">
+        {/* Dedicated shield gauge — appears above HP bar only when shield > 0.
+            Width is shield as % of max HP (capped at 100%); drains smoothly. */}
+        <div className={`arena-shield-row ${p.shield > 0 ? "active" : "hidden"}`}>
+          <span className="arena-shield-icon">⛨</span>
+          <div className="arena-shield-bar">
+            <div
+              className="arena-shield-fill"
+              style={{ width: `${Math.min(100, (p.shield / Math.max(1, p.maxHp)) * 100)}%` }}
+            />
+          </div>
+        </div>
+        <div className={`arena-hp-bar ${p.shield > 0 ? "shielded" : ""}`}>
           <div className="arena-hp-fill" style={{ width: `${hpPct}%` }} />
-          {p.shield > 0 && (
-            <div className="arena-hp-shield" style={{ left: `${hpPct}%`, width: `${shieldPct}%` }} />
-          )}
         </div>
         <div className="float-layer">
           {p.floats.map((f) => (

@@ -98,15 +98,9 @@ export function StashDrawer({ onDragStart }: Props) {
               inst={it}
               draggable
               onDragStart={onDragStart({ kind: "stash", uid: it.uid })}
+              onSell={() => sellStash(it.uid)}
               small
             />
-            <button
-              className="mm-btn"
-              style={{ padding: "2px 6px", fontSize: 10, marginTop: 2, width: "100%" }}
-              onClick={() => sellStash(it.uid)}
-            >
-              Sell
-            </button>
           </div>
         ))}
         {filtered.length === 0 && (

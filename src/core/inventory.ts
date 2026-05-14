@@ -88,6 +88,9 @@ export function tryMerge(
   a: ItemInstance,
   b: ItemInstance
 ): ItemInstance | null {
+  // Can't merge an item with itself — that was an exploit where dragging
+  // an item onto its own slot would upgrade it for free.
+  if (a.uid === b.uid) return null;
   if (a.defId !== b.defId) return null;
   if (a.rarity !== b.rarity) return null;
   if (a.rarity === "Diamond") return null;

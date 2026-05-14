@@ -363,15 +363,26 @@ export function simulateCombat(
       while (t >= nextSandstormTick) {
         const elapsed = nextSandstormTick - SANDSTORM_START;
         const dmg = sandstormDamageAt(elapsed);
-        // Bypass shield AND damage reduction so it can break stalemates.
-        for (const side of [P, E]) {
-          const before = side.combatant.currentHp;
-          side.combatant.currentHp = Math.max(0, before - dmg);
+        // Sandstorm now routes through shield FIRST, then bleeds into HP.
+        // We still skip the damageReductionPct perk so a pure-Bastion build
+        // can't fully tank it — but shield gets to absorb its share, which
+        // gives Iron Bark-style decks a brief reprieve as designed.
+        for (const sideKey of ["P", "E"] as const) {
+          const side = sideKey === "P" ? P : E;
+          let remaining = dmg;
+          if (side.shield > 0) {
+            const absorbed = Math.min(side.shield, remaining);
+            side.shield -= absorbed;
+            remaining -= absorbed;
+          }
+          if (remaining > 0) {
+            side.combatant.currentHp = Math.max(0, side.combatant.currentHp - remaining);
+          }
           events.push({
             t: nextSandstormTick,
             kind: "sandstorm-tick",
             amount: dmg,
-            targetSide: side === P ? "P" : "E",
+            targetSide: sideKey,
           });
         }
         nextSandstormTick += SANDSTORM_TICK_INTERVAL;

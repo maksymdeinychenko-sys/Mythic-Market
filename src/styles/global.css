@@ -417,6 +417,43 @@ button.mm-btn.danger:hover:not(:disabled) { background: var(--hp); color: white;
 .rarity-Gold    { color: var(--rar-gold); }
 .rarity-Diamond { color: var(--rar-diamond); text-shadow: 0 0 6px rgba(130, 231, 255, 0.6); }
 
+/* Quick-sell button revealed on tile hover. Shows price; click sells. */
+.item-tile-sell {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 6;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, var(--accent-amber), var(--accent-gold));
+  color: var(--bg-deep);
+  border: 1px solid #8a6b2c;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  font-feature-settings: "tnum";
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+.item-tile-sell::before {
+  content: "⛁";
+  font-size: 10px;
+  margin-right: 1px;
+}
+.item-tile:hover .item-tile-sell { display: inline-flex; }
+.item-tile-sell:hover {
+  transform: scale(1.08);
+  box-shadow: 0 3px 10px rgba(212, 168, 87, 0.6);
+}
+.item-tile-sell:active { transform: scale(0.96); }
+
 .link-arrow {
   position: absolute;
   font-size: 14px;
@@ -799,6 +836,61 @@ button.mm-btn.danger:hover:not(:disabled) { background: var(--hp); color: white;
   font-weight: 700;
 }
 
+/* ─── Dedicated shield gauge (appears when shield > 0) ─────────────────── */
+.arena-shield-row {
+  width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 12px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s, transform 0.3s, max-height 0.3s;
+  overflow: hidden;
+  max-height: 12px;
+}
+.arena-shield-row.hidden {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(8px);
+  margin: 0;
+  pointer-events: none;
+}
+.arena-shield-icon {
+  font-size: 11px;
+  color: var(--shield);
+  line-height: 1;
+  text-shadow: 0 0 4px rgba(192, 200, 212, 0.6);
+}
+.arena-shield-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(192, 200, 212, 0.45);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.5),
+    0 0 6px rgba(192, 200, 212, 0.25);
+}
+.arena-shield-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background:
+    linear-gradient(180deg, #e8ecf2 0%, #c0c8d4 50%, #989eb0 100%);
+  background-size: 200% 100%;
+  animation: mm-shield-sheen 1.8s linear infinite;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.6, 1);
+  box-shadow:
+    0 0 8px rgba(212, 216, 224, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+@keyframes mm-shield-sheen {
+  0%   { background-position: -100% 0; }
+  100% { background-position:  100% 0; }
+}
+
 .arena-hp-bar {
   width: 180px;
   height: 14px;
@@ -808,6 +900,15 @@ button.mm-btn.danger:hover:not(:disabled) { background: var(--hp); color: white;
   overflow: hidden;
   position: relative;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+.arena-hp-bar.shielded {
+  /* Soft outer glow that "wraps around" the HP bar while a shield is active */
+  border-color: rgba(192, 200, 212, 0.6);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(192, 200, 212, 0.18),
+    0 0 12px rgba(192, 200, 212, 0.35);
 }
 .arena-hp-fill {
   position: absolute;
@@ -816,12 +917,7 @@ button.mm-btn.danger:hover:not(:disabled) { background: var(--hp); color: white;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.6, 1);
   box-shadow: inset 0 -3px 4px rgba(0,0,0,0.3), 0 0 8px rgba(214, 74, 74, 0.4);
 }
-.arena-hp-shield {
-  position: absolute;
-  top: 0; bottom: 0;
-  background: linear-gradient(180deg, #d4d6e0, #989cb0);
-  transition: width 0.35s, left 0.35s;
-}
+/* .arena-hp-shield — replaced by the dedicated .arena-shield-row above */
 
 /* Cards row */
 .arena-cards {
