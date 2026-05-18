@@ -15,12 +15,14 @@ interface Props {
   onDragLeave?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
   onClick?: () => void;
+  /** Double-click handler — used to unequip battle items into the stash. */
+  onDoubleClick?: () => void;
   /** Hover-revealed sell button; pass a handler to enable. */
   onSell?: () => void;
   small?: boolean;
 }
 
-export function ItemTile({ inst, draggable = false, onDragStart, onDragOver, onDragLeave, onDrop, onClick, onSell, small }: Props) {
+export function ItemTile({ inst, draggable = false, onDragStart, onDragOver, onDragLeave, onDrop, onClick, onDoubleClick, onSell, small }: Props) {
   const def = itemById(inst.defId);
   const dir = effectiveLinkDir(inst);
   const sizeClass = def.size === 2 ? "size-2" : def.size === 3 ? "size-3" : "";
@@ -36,6 +38,7 @@ export function ItemTile({ inst, draggable = false, onDragStart, onDragOver, onD
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onClick={onClick}
+        onDoubleClick={onDoubleClick}
         data-uid={inst.uid}
       >
         <div className="item-art"><ItemArt defId={def.id} /></div>

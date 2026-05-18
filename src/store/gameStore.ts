@@ -9,7 +9,9 @@ import type { PerkId } from "@/core/types";
 import { generateShop, type ShopState, buy, reroll, toggleLock, sellFromStash, sellFromBattle } from "@/core/shop";
 import {
   moveStashToBattle, moveBattleToStash,
-  attemptMergeInBattle, attemptMergeStashToBattle, acquireItem,
+  attemptMergeInBattle, attemptMergeStashToBattle,
+  attemptMergeStashToStash, attemptMergeBattleToStash,
+  acquireItem,
 } from "@/core/inventory";
 import { gainXp } from "@/core/progression";
 import { buildEncounter } from "@/core/encounter";
@@ -48,6 +50,8 @@ interface GameState {
   unplaceFromBattle: (uid: string) => void;
   mergeBattle: (dragUid: string, targetUid: string) => void;
   mergeStashToBattle: (stashUid: string, battleUid: string) => void;
+  mergeStashToStash: (dragUid: string, targetUid: string) => void;
+  mergeBattleToStash: (battleUid: string, stashUid: string) => void;
   sellStash: (uid: string) => void;
   sellBattle: (uid: string) => void;
 
@@ -136,6 +140,20 @@ export const useGameStore = create<GameState>()(
     const rs = get().run; if (!rs) return;
     const before = rs.battleInventory.length + rs.stash.length;
     const next = attemptMergeStashToBattle(rs, stashUid, battleUid);
+    set({ run: next });
+    if (next.battleInventory.length + next.stash.length !== before) SFX.merge();
+  },
+  mergeStashToStash: (dragUid, targetUid) => {
+    const rs = get().run; if (!rs) return;
+    const before = rs.stash.length;
+    const next = attemptMergeStashToStash(rs, dragUid, targetUid);
+    set({ run: next });
+    if (next.stash.length !== before) SFX.merge();
+  },
+  mergeBattleToStash: (battleUid, stashUid) => {
+    const rs = get().run; if (!rs) return;
+    const before = rs.battleInventory.length + rs.stash.length;
+    const next = attemptMergeBattleToStash(rs, battleUid, stashUid);
     set({ run: next });
     if (next.battleInventory.length + next.stash.length !== before) SFX.merge();
   },

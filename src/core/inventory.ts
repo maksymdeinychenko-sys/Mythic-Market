@@ -175,6 +175,55 @@ export function attemptMergeStashToBattle(
   };
 }
 
+/**
+ * Merge two stash items into one of the next rarity. Result stays in the
+ * stash (slotIndex stays -1). No-op if the items can't merge.
+ */
+export function attemptMergeStashToStash(
+  rs: RunState,
+  draggedUid: string,
+  targetUid: string
+): RunState {
+  if (draggedUid === targetUid) return rs;
+  const drag = rs.stash.find((x) => x.uid === draggedUid);
+  const target = rs.stash.find((x) => x.uid === targetUid);
+  if (!drag || !target) return rs;
+  const merged = tryMerge(drag, target);
+  if (!merged) return rs;
+  return {
+    ...rs,
+    stash: [
+      ...rs.stash.filter((x) => x.uid !== drag.uid && x.uid !== target.uid),
+      { ...merged, slotIndex: -1 },
+    ],
+  };
+}
+
+/**
+ * Merge a battle item onto a matching stash item — the merged result lands
+ * in the stash (the battle slot frees up). Used when the player drags a
+ * battle item onto the stash and it happens to match a stash item.
+ */
+export function attemptMergeBattleToStash(
+  rs: RunState,
+  battleUid: string,
+  stashUid: string
+): RunState {
+  const drag = rs.battleInventory.find((x) => x.uid === battleUid);
+  const target = rs.stash.find((x) => x.uid === stashUid);
+  if (!drag || !target) return rs;
+  const merged = tryMerge(drag, target);
+  if (!merged) return rs;
+  return {
+    ...rs,
+    battleInventory: rs.battleInventory.filter((x) => x.uid !== drag.uid),
+    stash: [
+      ...rs.stash.filter((x) => x.uid !== target.uid),
+      { ...merged, slotIndex: -1 },
+    ],
+  };
+}
+
 // ─── Link resolution: figure out adjacency given grid layout ────────────────
 export function effectiveLinkDir(inst: ItemInstance): LinkDirection {
   const def = itemById(inst.defId);

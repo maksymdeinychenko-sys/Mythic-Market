@@ -519,6 +519,19 @@ button.mm-btn.danger:hover:not(:disabled) { background: var(--hp); color: white;
   gap: 8px;
   padding: 8px 0;
 }
+/* Highlight the whole stash drop zone while a battle item is being dragged
+   over empty space inside it (visual cue for "drop to unequip"). */
+.tile-strip.stash-strip {
+  min-height: 96px;
+  padding: 10px;
+  border: 1px dashed transparent;
+  border-radius: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tile-strip.stash-strip.drop-target {
+  border-color: var(--accent-amber);
+  background: rgba(212, 168, 87, 0.06);
+}
 .tile-strip .item-tile { width: 84px; height: 84px; }
 
 .shop-offer {

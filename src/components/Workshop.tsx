@@ -80,7 +80,7 @@ export function Workshop() {
       <div className="opponent-preview">
         <div className="h3">Battle Inventory ({run.battleInventory.length} items)</div>
         <div className="muted" style={{ fontSize: 12 }}>
-          Drag from Stash to a slot. Drop on an identical item to merge. Double-click in battle to send to stash.
+          Drag between Stash and slots. Drop on a matching item to merge (works in both directions). Double-click a battle item to send it to the stash.
         </div>
       </div>
 
@@ -111,6 +111,7 @@ export function Workshop() {
                   draggable={!isLocked}
                   onDragStart={dragStart({ kind: "battle", uid: occupant.uid })}
                   onClick={() => {}}
+                  onDoubleClick={() => unplaceFromBattle(occupant.uid)}
                   onSell={() => sellBattle(occupant.uid)}
                 />
               ) : isLocked ? (
